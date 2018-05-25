@@ -385,7 +385,8 @@
                 // We can load a camera if there is a 'camera' entry.
                 return 'camera' in data;
             }
-            
+
+            //converts standard RGB (0 to 1) to linear RGB (0 to 255)
             function sRGB_to_LinearRGB( srgb ) {
                 if( !kGammaCorrect ) return srgb;
                 
@@ -404,7 +405,6 @@
                         : Math.pow( ( val + a ) / ( 1 + a ), 2.4 )
                         ;
                 }
-                
                 return rgb;
             }
             
@@ -511,6 +511,9 @@
             
             function createParticles( params )
             {
+
+               
+
                 if( params === undefined ) params = {};
                 // By default, only create particles for unique colors.
                 if( !( 'only_unique_pixels' in params ) ) params.only_unique_pixels = true;
@@ -518,6 +521,10 @@
                 if( !( 'clear_overlay_mesh' in params ) ) params.clear_overlay_mesh = true;
                 // By default, don't count the number of extreme (0 or 255) values.
                 if( !( 'count_extreme_values' in params ) ) params.count_extreme_values = true;
+
+                ////////////////////////////////////////////////////////////////////
+                if(!('display_XY' in params)) params.display_XY = true;
+                ////////////////////////////////////////////////////////////////////
                 
                 if( particleSystem !== undefined ) scene.remove( particleSystem );
                 // Also clear the overlay mesh if there is one.
@@ -548,10 +555,18 @@
 
                 for ( var i = 0; i < num_particles; i += 1 ) {
 
-                    // colors are also positions
+                    colors are also positions
                     var r = pixels[ 4*i + 0 ]/255.;
                     var g = pixels[ 4*i + 1 ]/255.;
                     var b = pixels[ 4*i + 2 ]/255.;
+
+                    //TODO: set the pixel's position in RGB-space, set the COLOR to xy-space position
+                    //xy -> rg
+                    // col = i%w
+                    // row = Math.floor(i/w)
+
+                    // r = col/(width-1)*255
+                    // g = row/(height-1)*255
                     
                     var linear_rgb = sRGB_to_LinearRGB( [ r,g,b ] );
                     
@@ -580,7 +595,8 @@
 
                 //
 
-                var material = new THREE.PointCloudMaterial( { size: 4/255., vertexColors: THREE.VertexColors } );
+                //var material = new THREE.PointCloudMaterial( { size: 4/255., vertexColors: THREE.VertexColors } );
+                var material = new THREE.PointCloudMaterial( { size: 1/(255. * 4), vertexColors: THREE.VertexColors } );
 
                 particleSystem = new THREE.PointCloud( geometry, material );
                 // return particleSystem;
@@ -588,10 +604,12 @@
                 
                 render();
             }
+
             function loadableFloatColors( parsed )
             {
                 return 'float_colors' in parsed;
             }
+
             function loadFloatColors( parsed )
             {
                 console.log( "loadFloatColors( ... ):" );
